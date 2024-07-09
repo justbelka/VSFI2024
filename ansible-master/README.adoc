@@ -1,0 +1,45 @@
+= VSFI Ansible
+
+VSFI
+
+. https://docs.docker.com/engine/install/debian/
+. https://docs.ansible.com/ansible/2.9/modules/list_of_all_modules.html
+. https://www.sonatype.com/products/sonatype-nexus-repository
+. https://github.com/dmacvicar/terraform-provider-libvirt
+. https://docs.ansible.com/ansible/latest/collections/community/docker/docker_login_module.html
+
+
+vault
+
+install depends
+
+----
+ansible-galaxy install -r requirements.yml
+ansible-playbook -i inventory/myserver setup.yaml --vault-password-file=pass
+----
+
+----
+- name: Log into private registry and force re-authorization
+  community.docker.docker_login:
+    registry_url: your.private.registry.io
+    username: yourself
+    password: secrets3
+    reauthorize: true
+----
+
+----
+
+- name: Ensure public keys added for root
+  tags: [system, ssh]
+  ansible.posix.authorized_key:
+    user: root
+    state: present
+    exclusive: true
+    key: "{{ lookup('ansible.builtin.template', 'pub_keys.j2') }}"
+
+----
+
+
+----
+ansible-vault create secrets.yaml
+----

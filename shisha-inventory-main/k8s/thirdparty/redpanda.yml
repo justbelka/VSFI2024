@@ -1,0 +1,26 @@
+image:
+  repository: redpandadata/redpanda
+  tag: v23.3.18
+
+persistentVolume:
+  enabled: true
+  size: 2Gi
+listeners:
+  kafka:
+    # -- The port for internal client connections.
+    port: 9093
+    tls:
+      # Optional flag to override the global TLS enabled flag.
+      enabled: false
+
+statefulset:
+  replicas: 1
+  extraVolumes: |-
+    - name: redpanda-io-config
+      configMap:
+        name: redpanda-io-config
+  extraVolumeMounts: |-
+    - name: redpanda-io-config
+      mountPath: /etc/redpanda-io-config
+  additionalRedpandaCmdFlags:
+    - "--io-properties-file=/etc/redpanda-io-config/io-config.yml"

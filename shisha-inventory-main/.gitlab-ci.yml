@@ -1,0 +1,105 @@
+variables:
+  CI_REGISTRY: registry-rw.vsfi.ru/$CI_PROJECT_NAME/nocturnalq
+  PROXY_REGISTRY: registry.vsfi.ru
+
+stages:
+  - test
+  - build
+  - deploy
+
+unit-test-server:
+  stage: test
+  image:
+    name: registry.vsfi.ru/library/golang:1.21.1
+  variables:
+    CGO_ENABLED: 0
+    DOCKER_TLS_CERTDIR: ""
+    DOCKER_HOST: "tcp://docker:2375"
+    DOCKER_TLS_VERIFY: "0"
+    TESTCONTAINERS_HUB_IMAGE_NAME_PREFIX: "registry.vsfi.ru"
+    GOPROXY: https://go-proxy-user:fn298f0g21fwr@nexus.vsfi.ru/repository/go-mod-shisha-server
+  services:
+    - name: registry.vsfi.ru/library/docker:27.0.2-dind
+      alias: docker
+  script:
+    - cd server && go test -v ./tests
+    - go install gotest.tools/gotestsum@latest
+    - gotestsum --junitfile report.xml --format standard-verbose
+  artifacts:
+    when: always
+    reports:
+      junit: server/report.xml
+  tags:
+    - cicd-workshop
+
+build-server:
+  stage: build
+  image: 
+    name: registry.vsfi.ru/kaniko-project/executor:v1.14.0-debug
+    entrypoint: [""]
+  script:
+    - echo [INFO] Start building container ${CI_REGISTRY}:server-${CI_COMMIT_SHORT_SHA}
+    - mkdir -p /kaniko/.docker
+    - |
+      echo "{
+      \"auths\": {
+        \"${CI_REGISTRY}\": {
+          \"auth\":\"$(echo -n ${CI_REGISTRY_USER}:${CI_REGISTRY_PASSWORD} | base64)\"
+        },
+        \"${PROXY_REGISTRY}\": {
+          \"auth\":\"$(echo -n ${CI_REGISTRY_USER}:${CI_REGISTRY_PASSWORD} | base64)\"
+          }       
+      }
+      }" > /kaniko/.docker/config.json
+    - /kaniko/executor
+      --context "${CI_PROJECT_DIR}"
+      --dockerfile "${CI_PROJECT_DIR}/Dockerfile-server"
+      --destination "${CI_REGISTRY}:server-${CI_COMMIT_SHORT_SHA}"
+  tags:
+    - cicd-workshop
+  needs: ["unit-test-server"]
+
+build-client:
+  stage: build
+  image: 
+    name: registry.vsfi.ru/kaniko-project/executor:v1.14.0-debug
+    entrypoint: [""]
+  script:
+    - echo [INFO] Start building container ${CI_REGISTRY}:server-${CI_COMMIT_SHORT_SHA}
+    - mkdir -p /kaniko/.docker
+    - |
+      echo "{
+      \"auths\": {
+        \"${CI_REGISTRY}\": {
+          \"auth\":\"$(echo -n ${CI_REGISTRY_USER}:${CI_REGISTRY_PASSWORD} | base64)\"
+        },
+        \"${PROXY_REGISTRY}\": {
+          \"auth\":\"$(echo -n ${CI_REGISTRY_USER}:${CI_REGISTRY_PASSWORD} | base64)\"
+          }       
+      }
+      }" > /kaniko/.docker/config.json
+    - cat /kaniko/.docker/config.json
+    - /kaniko/executor
+      --context "${CI_PROJECT_DIR}"
+      --dockerfile "${CI_PROJECT_DIR}/Dockerfile-client"
+      --destination "${CI_REGISTRY}:client-${CI_COMMIT_SHORT_SHA}"
+  tags:
+    - cicd-workshop
+
+deploy-server:
+  stage: deploy
+  image: registry.vsfi.ru/alpine/helm:3.2.1
+  script:
+    - helm upgrade ${CI_PROJECT_NAME}-server ./k8s/helm/server --create-namespace --install --values=./k8s/helm/server/values.yaml --namespace ${CI_PROJECT_NAME} --set image.repository=${CI_REGISTRY} --set image.tag=server-${CI_COMMIT_SHORT_SHA}
+  tags:
+    - cicd-workshop
+  needs: ["build-server"]
+
+deploy-client:
+  stage: deploy
+  image: registry.vsfi.ru/alpine/helm:3.2.1
+  script:
+    - helm upgrade ${CI_PROJECT_NAME}-client ./k8s/helm/client --create-namespace --install --values=./k8s/helm/client/values.yaml --namespace ${CI_PROJECT_NAME} --set image.repository=${CI_REGISTRY} --set image.tag=client-${CI_COMMIT_SHORT_SHA}
+  tags:
+    - cicd-workshop
+  needs: ["build-client"]

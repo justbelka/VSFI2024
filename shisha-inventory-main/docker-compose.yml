@@ -1,0 +1,91 @@
+version: '3.7'
+services:
+  redpanda:
+    command:
+      - redpanda
+      - start
+      - '--smp'
+      - '1'
+      - '--reserve-memory'
+      - 0M
+      - '--overprovisioned'
+      - '--node-id'
+      - '0'
+      - --kafka-addr internal://0.0.0.0:9092,external://0.0.0.0:19092
+      - --advertise-kafka-addr internal://redpanda:9092,external://localhost:19092
+    image: 'mirror.gcr.io/vectorized/redpanda:v21.9.3'
+    container_name: redpanda
+    ports:
+      - '9092:9092'
+      - '29092:29092'
+    restart: always
+
+  redis:
+    image: mirror.gcr.io/redis:latest
+    container_name: redis
+    restart: always
+    ports:
+      - "6379:6379"
+    environment:
+      - REDIS_PORT=6379
+
+  minio1:
+    image: quay.io/minio/minio:RELEASE.2024-05-28T17-19-04Z
+    command: server /data --console-address ":9001"
+    container_name: minio
+    env_file:
+      - .env
+    expose:
+      - "9000"
+      - "9001"
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    hostname: minio1
+    restart: always
+
+  nginx:
+    image: mirror.gcr.io/nginx:1.19.2-alpine
+    container_name: nginx
+    hostname: nginx
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    depends_on:
+      - minio1
+    restart: always
+
+  database:
+    image: mirror.gcr.io/postgres:16.3-bookworm
+    restart: always
+    ports:
+      - "5432:5432"
+    env_file:
+      - .env
+    volumes:
+      - ./create_extensions.sql:/docker-entrypoint-initdb.d/create_extensions.sql:ro
+    container_name: database
+  
+  backend:
+    image: shisha-back
+    restart: always
+    container_name: shisha-back
+    env_file:
+      - .env
+    command: --s3-endpoint nginx:9000
+
+  frontend:
+    image: shisha-client
+    restart: always
+    container_name: shisha-front
+    ports:
+      - "80:80"
+    entrypoint: ["nginx", "-g", "daemon off;"]
+  
+networks:
+  default:
+    name: shisha_network

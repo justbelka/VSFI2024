@@ -1,0 +1,3 @@
+.vscode/
+minio_data/
+!minio_data/.gitkeep

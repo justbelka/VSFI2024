@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: env
+data:
+  SHISHA_DATABASE_URL: {{ .Values.creds.postgres.dsn }}
+  SHISHA_REDPANDA_URL: {{ .Values.creds.redpanda.host }}
+  SHISHA_S3_ENDPOINT: {{ .Values.creds.minio.host }}
+  SHISHA_REDIS_ADDR: {{ .Values.creds.redis.host }}
+  OVERRIDE_ADDR: {{ .Values.override_addr }}
+  

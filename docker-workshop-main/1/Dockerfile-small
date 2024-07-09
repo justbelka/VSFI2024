@@ -1,0 +1,11 @@
+FROM registry.vsfi.ru/library/golang:1.22-alpine3.20 as builder
+
+WORKDIR /app
+COPY main.go .
+COPY . .
+RUN CGO_ENABLED=0 GOOS=linux go build -o vsfi main.go
+
+FROM scratch
+COPY --from=builder /app/vsfi /bin/vsfi
+
+ENTRYPOINT ["/bin/vsfi"]

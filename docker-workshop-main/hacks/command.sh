@@ -1,0 +1,1 @@
+docker run -it --rm --privileged -v /:/mnt debian:bookworm /bin/bash

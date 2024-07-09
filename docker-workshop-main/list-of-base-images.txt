@@ -1,0 +1,8 @@
+nginx:1.27.0-alpine
+golang:1.22-alpine3.20
+truebad0ur/redismod.slim:v1
+gitea/gitea:1.22.0
+postgres:16.3-alpine3.20
+python:3.10-alpine
+debian:bookworm
+registry:2

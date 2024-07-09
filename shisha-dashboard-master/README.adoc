@@ -1,0 +1,39 @@
+= Shisha Dashboard
+
+[cols="8*"]
+|===
+3+a| Имя: 5+a| Shisha Dashboard
+
+3+a| *Описание:*
+5+a|
+
+Предоставляет аналитику по событиям от основного приложения Shisha Inventory
+
+8+a| *Возможности*
+8+a|
+Чтение и сохранение событий из RedPanda.
+Аналитические запросы по событиям
+8+| *Observability*
+8+| Ключевые метрики
+8+a|
+
+* saved_events_count
+* axum_http_requests_total
+* axum_http_requests_duration_seconds_sum
+
+4+| Health check
+4+| /health
+4+| Readiness check
+4+| /ready
+4+| Metrics
+4+| /metrics/prometheus
+8+a| *Развертывание*
+4+| Зависимости
+4+| RedPanda, MySQL 8.4.0
+8+| Переменные среды
+8+a|
+
+* DATABASE_URL - URL к базе данных в формате `mysql://<username>:<password>@<host>:<port>/<database-name>`
+* BOOTSTRAP_SERVERS - Хост RedPanda или адреса все брокеров в формате `<host>:<port>,<host>:<port>`
+* TOPIC - Название топика в который пишет события shisha-inventory
+|===

@@ -1,0 +1,53 @@
+---
+
+- name: Setup k3s
+  hosts: k3s
+  remote_user: root
+  tasks:
+    - name: Create files
+      file:
+        dest: "{{ item }}"
+        state: directory
+      with_items:
+        - /var/lib/rancher/k3s/agent/images/
+        - /etc/rancher/k3s/
+
+    - name: Fetch images
+      get_url:
+        url: https://files.vsfi.ru/k3s/k3s-airgap-images-amd64.tar
+        dest:  /var/lib/rancher/k3s/agent/images/k3s-airgap-images-amd64.tar
+
+    - name: copy install script
+      copy:
+        src: files/install.sh
+        dest: /root/install.sh
+        mode: +x
+
+    - name: fetch install k3s
+      get_url:
+        url: https://files.vsfi.ru/k3s/k3s
+        dest: /usr/local/bin/k3s
+        mode: +x
+    - name: registries
+      copy:
+        dest: /etc/rancher/k3s/registries.yaml
+        content: |
+          mirrors:
+            docker.io:
+              endpoint:
+                - https://registry.vsfi.ru/v2
+          configs:
+            registry.vsfi.ru:
+              auth:
+                username: docker-user
+                password: docker-user
+
+    - name: install
+      shell: /root/install.sh
+      environment:
+        INSTALL_K3S_SKIP_DOWNLOAD: true
+      register: __k3s_install
+
+    - name: debug
+      debug:
+        var: __k3s_install

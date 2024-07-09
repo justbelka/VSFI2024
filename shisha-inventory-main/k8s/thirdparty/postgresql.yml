@@ -1,0 +1,17 @@
+# image:
+#   registry: registry.vsfi.ru
+#   repository: bitnami/postgresql
+#   tag: 16.3.0-debian-12-r16
+
+global:
+  postgresql:
+    auth:
+      postgresPassword: "rootpassword"
+      username: "shisha"
+      password: "shishapassword"
+      database: "shisha"
+primary:
+  initdb:  
+    scripts:
+     00_init_extensions.sql: |
+        CREATE EXTENSION IF NOT EXISTS "uuid-ossp";

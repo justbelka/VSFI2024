@@ -1,0 +1,14 @@
+version: "3"
+services:
+  stress:
+    deploy:
+      resources:
+        limits:
+          cpus: '0.1'
+          memory: 300M
+    command: >
+      sleep 10
+      && dd if=/dev/zero bs=1M | head -c 10000M | tail
+      && sleep 100000
+    image: registry.vsfi.ru/library/debian:bookworm
+    restart: always

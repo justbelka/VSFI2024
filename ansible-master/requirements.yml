@@ -1,0 +1,13 @@
+---
+roles:
+collections:
+  - name: ansible.posix
+    version: 1.5.4
+  - name: community.general
+    version: 9.1.0
+  - name: community.docker
+    version: 3.10.4
+  # - name: prometheus.prometheus
+  #   type: git
+  #   source: https://github.com/prometheus-community/ansible.git
+  #

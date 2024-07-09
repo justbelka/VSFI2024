@@ -1,0 +1,10 @@
+{
+    "auths": {
+        "registry.vsfi.ru": {
+            "auth": "ZG9ja2VyLXVzZXI6ZG9ja2VyLXVzZXI="
+        },
+        "registry-rw.vsfi.ru": {
+            "auth": "ZG9ja2VyLXVzZXI6ZG9ja2VyLXVzZXI="
+        }
+    }
+}

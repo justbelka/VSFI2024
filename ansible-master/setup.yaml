@@ -1,0 +1,56 @@
+---
+
+- name: Setup new host
+  hosts: vsfi
+  remote_user: root
+  vars:
+    # https://docs.docker.com/engine/install/debian/
+    packages:
+      - docker-ce
+      - docker-ce-cli
+      - containerd.io
+      - docker-buildx-plugin
+      - docker-compose-plugin
+  handlers:
+    - name: echo
+      debug:
+        msg: "hello world"
+  tasks:
+    - name: Setup apt auth
+      copy:
+        dest: /etc/apt/auth.conf
+        content: |
+          # Managed ansible
+          machine nexus.vsfi.ru
+          login debian
+          password debian
+
+    - name: Add specified repository into sources list
+      ansible.builtin.apt_repository:
+        repo: "{{ item }}"
+        state: present
+      with_items:
+        - deb [trusted=yes] https://nexus.vsfi.ru/repository/debian-12/ bookworm main non-free-firmware
+        - deb [trusted=yes] https://nexus.vsfi.ru/repository/debian-12/ bookworm-updates main non-free-firmware
+        - deb [trusted=yes] https://nexus.vsfi.ru/repository/apt-docker/ bookworm stable
+
+    - name: Install package
+      package:
+        name: "{{ packages }}"
+        state: present
+
+    - name: Log into private registry and force re-authorization
+      community.docker.docker_login:
+        registry_url: registry.vsfi.ru
+        username: "{{ __vault_docker_login }}"
+        password: "{{ __vault_docker_password }}"
+        reauthorize: true
+
+    - name: Ensure public keys added for root
+      ansible.posix.authorized_key:
+        user: root
+        state: present
+        exclusive: false
+        key: |
+          ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDHm10sJPCdsGzaYeg9PLzT3/O8PMObQ+0h+Sd6xORMo hdhog@laptop
+

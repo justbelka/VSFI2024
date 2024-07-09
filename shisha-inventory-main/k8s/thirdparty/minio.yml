@@ -1,0 +1,20 @@
+auth:
+  rootUser: minio
+  rootPassword: minioadmin
+
+statefulset:
+  replicaCount: 1
+
+persistence:
+  enabled: true
+  size: 2Gi
+
+ingress:
+  enabled: true
+  hostname: minio.shisha.vsfi.ru
+
+apiIngress:
+  ## @param apiIngress.enabled Enable ingress controller resource for MinIO API
+  ##
+  enabled: true
+  hostname: minio-api.shisha.vsfi.ru

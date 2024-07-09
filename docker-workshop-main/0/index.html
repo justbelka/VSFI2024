@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VSFI Animation</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f0f0f0;
+            font-family: Arial, sans-serif;
+            margin: 0;
+        }
+
+        .letter {
+            font-size: 5rem;
+            font-weight: bold;
+            display: inline-block;
+            margin: 0 0.5rem;
+            animation: wiggle 1s infinite;
+        }
+
+        @keyframes wiggle {
+            0%, 100% {
+                transform: rotate(0deg);
+            }
+            25% {
+                transform: rotate(10deg);
+            }
+            50% {
+                transform: rotate(-10deg);
+            }
+            75% {
+                transform: rotate(10deg);
+            }
+        }
+
+        /* Different colors for each letter for added silliness */
+        .letter:nth-child(1) {
+            color: red;
+            animation-delay: 0s;
+        }
+        .letter:nth-child(2) {
+            color: blue;
+            animation-delay: 0.2s;
+        }
+        .letter:nth-child(3) {
+            color: green;
+            animation-delay: 0.4s;
+        }
+        .letter:nth-child(4) {
+            color: purple;
+            animation-delay: 0.6s;
+        }
+    </style>
+</head>
+<body>
+    <div class="letter">V</div>
+    <div class="letter">S</div>
+    <div class="letter">F</div>
+    <div class="letter">I</div>
+</body>
+</html>

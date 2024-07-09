@@ -1,0 +1,20 @@
+# build environment
+FROM registry.vsfi.ru/library/node:20.13.1-alpine as build
+WORKDIR /app
+
+ENV PATH /app/node_modules/.bin:$PATH
+COPY client/package.json /app/package.json
+COPY client/.npmrc /app/.npmrc
+RUN npm install --verbose
+# RUN npm config set unsafe-perm true #https://stackoverflow.com/questions/52196518/could-not-get-uid-gid-when-building-node-docker
+RUN npm config set audit false
+RUN npm install react-scripts@5.0.1 -g --verbose --registry=https://nexus.vsfi.ru/repository/npm-shisha-proxy-modules/
+COPY client/ /app
+RUN npm run build
+
+# production environment
+FROM registry.vsfi.ru/library/nginx:1.16.0-alpine
+COPY --from=build /app/build /usr/share/nginx/html
+COPY nginx-client.conf /etc/nginx/nginx.conf
+EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]
